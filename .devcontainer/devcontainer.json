@@ -1,5 +1,18 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
-  "features": {
+  "name": "Go",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "remoteUser": "vscode",
+  "features": {},
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      "settings": {
+        "editor.formatOnSave": true
+      },
+      "extensions": ["streetsidesoftware.code-spell-checker", "ms-azuretools.vscode-docker", "golang.Go"]
+    }
   }
 }
