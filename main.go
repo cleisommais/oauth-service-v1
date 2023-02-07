@@ -1,16 +1,29 @@
-// main.go
 package main
 
 import (
-	"log"
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/cleisommais/oauth-service-v1/routes"
 )
 
 func main() {
-	r := mux.NewRouter()
-	r.HandleFunc("/auth", AuthController.Authenticate).Methods("POST")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
 
-	log.Fatal(http.ListenAndServe(":8080", r))
+	r := mux.NewRouter()
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello, World!")
+	})
+	r.HandleFunc("/test", routes.TestHandler).Methods("GET")
+
+	fmt.Println("Listening on port", port)
+	err := http.ListenAndServe(":"+port, r)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
