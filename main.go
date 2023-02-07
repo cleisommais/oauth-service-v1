@@ -3,39 +3,61 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"log"
 	"os"
+	"strings"
 
+	"github.com/cleisommais/oauth-service-v1/db"
+	"github.com/cleisommais/oauth-service-v1/routes"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"github.com/cleisommais/oauth-service-v1/routes"
-	"github.com/cleisommais/oauth-service-v1/db"	
+
+	"github.com/sirupsen/logrus"
 )
 
+const (
+	LocalEnv   = "LOCAL"
+	DefaultPort = "8000"
+)
+
+func init() {
+	if LocalEnv == strings.ToUpper(os.Getenv("ENV")) {
+		logrus.SetFormatter(&logrus.TextFormatter{
+			DisableColors: false,
+			FullTimestamp: true,
+		})
+		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+		logrus.SetLevel(logrus.InfoLevel)
+	}
+}
+
 func main() {
-	errEnvLoad := godotenv.Load()
-	if errEnvLoad != nil {
-		log.Fatalf("Error loading .env file: %v", errEnvLoad)
-	}	
+	err := godotenv.Load()
+	if err != nil {
+		logrus.WithError(err).Fatal("Error loading .env file")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8000"
 	}
-	conn, err := db.CreatePostgresConnection()
+
+	dbConn, err := db.CreatePostgresConnection()
 	if err != nil {
-		log.Fatalf("Error creating database connection: %v", err)
+		logrus.WithError(err).Fatal("Error connecting to Postgres")
 	}
-	defer conn.Close()	
+	defer dbConn.Close()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, World!")
+		fmt.Fprint(w, "Hello, World!")
 	})
 	r.HandleFunc("/test", routes.TestHandler).Methods("GET")
 
-	fmt.Println("Listening on port", port)
-	httpErr := http.ListenAndServe(":"+port, r)
-	if httpErr != nil {
-		fmt.Println(httpErr)
+	logrus.WithField("port", port).Info("Listening on port")
+	err = http.ListenAndServe(":"+port, r)
+	if err != nil {
+		logrus.WithError(err).Fatal("Error starting the server")
 	}
 }
