@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -10,7 +9,7 @@ import (
 	"github.com/cleisommais/oauth-service-v1/routes"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-
+	"github.com/urfave/negroni"
 	"github.com/sirupsen/logrus"
 )
 
@@ -49,7 +48,18 @@ func main() {
 	}
 	defer dbConn.Close()
 
-	r := mux.NewRouter()
+	router := mux.NewRouter().StrictSlash(true)
+	for _, route := range routes.RoutesSetup {
+		var handler http.Handler
+		handler = routes.MakeHandler(route.HandlerFunc)
+		router.Methods(route.Method).Path(route.Pattern).Name(route.Name).Handler(handler)
+	}
+	n := negroni.New()
+	n.Use(negroni.NewLogger())
+	//n.Use(negroni.HandlerFunc())
+	n.UseHandler(router)
+	n.Run(":"+port)
+	/*r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, World!")
 	})
@@ -59,5 +69,5 @@ func main() {
 	err = http.ListenAndServe(":"+port, r)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error starting the server")
-	}
+	}*/
 }

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	models "github.com/cleisommais/oauth-service-v1/app/models"
+	models "github.com/cleisommais/oauth-service-v1/models"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"github.com/unrolled/render"
