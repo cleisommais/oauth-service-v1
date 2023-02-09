@@ -1,3 +1,11 @@
 {
-  "cSpell.words": ["dbname"]
+  "cSpell.words": ["dbname"],
+  "gopls": {
+    "ui.semanticTokens": true,
+    "formatting.gofumpt": true
+  },
+  "[go]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "golang.go"
+  }
 }

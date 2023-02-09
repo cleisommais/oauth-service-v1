@@ -9,12 +9,12 @@ import (
 	"github.com/cleisommais/oauth-service-v1/routes"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"github.com/urfave/negroni"
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/negroni"
 )
 
 const (
-	LocalEnv   = "LOCAL"
+	LocalEnv    = "LOCAL"
 	DefaultPort = "8000"
 )
 
@@ -58,7 +58,7 @@ func main() {
 	n.Use(negroni.NewLogger())
 	//n.Use(negroni.HandlerFunc())
 	n.UseHandler(router)
-	n.Run(":"+port)
+	n.Run(":" + port)
 	/*r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, World!")

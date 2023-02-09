@@ -3,8 +3,8 @@ package controllers
 
 import (
 	"encoding/json"
-	"net/http"
 	"github.com/cleisommais/oauth-service-v1/models"
+	"net/http"
 )
 
 // TestController is a controller function that writes the response to a /test request

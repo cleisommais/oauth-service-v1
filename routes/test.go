@@ -2,8 +2,8 @@
 package routes
 
 import (
+	"github.com/cleisommais/oauth-service-v1/controllers"
 	"net/http"
-	"github.com/cleisommais/oauth-service-v1/controllers"	
 )
 
 // TestHandler is a handler function that serves the /test route
