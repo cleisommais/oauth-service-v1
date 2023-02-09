@@ -9,7 +9,7 @@ import (
 	"github.com/cleisommais/oauth-service-v1/routes"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 )
 
@@ -18,28 +18,28 @@ const (
 )
 
 func start() {
-	var formatter logrus.Formatter
-	logLevel := logrus.InfoLevel
+	var formatter log.Formatter
+	logLevel := log.InfoLevel
 
 	if os.Getenv("ENV") == LOCAL {
-		formatter = &logrus.TextFormatter{
+		formatter = &log.TextFormatter{
 			DisableColors: false,
 			FullTimestamp: true,
 			ForceColors: true,
 		}
-		logLevel = logrus.DebugLevel
+		logLevel = log.DebugLevel
 	} else {
-		formatter = &logrus.JSONFormatter{}
+		formatter = &log.JSONFormatter{}
 	}
 
-	logrus.SetFormatter(formatter)
-	logrus.SetLevel(logLevel)
-	logrus.Info("Running as " + os.Getenv("ENV") + " Environment")
+	log.SetFormatter(formatter)
+	log.SetLevel(logLevel)
+	log.Info("Running as " + os.Getenv("ENV") + " Environment")
 }
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		logrus.WithError(err).Fatal("Error loading .env file")
+		log.WithError(err).Fatal("Error loading .env file")
 	}
 	start()
 	port := os.Getenv("PORT")
@@ -49,7 +49,7 @@ func main() {
 
 	dbConn, err := db.CreatePostgresConnection()
 	if err != nil {
-		logrus.WithError(err).Fatal("Error connecting to Postgres")
+		log.WithError(err).Fatal("Error connecting to Postgres")
 	}
 	defer dbConn.Close()
 
