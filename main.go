@@ -14,17 +14,18 @@ import (
 )
 
 const (
-	EnvLocal = "local"
+	LOCAL = "local"
 )
 
 func start() {
 	var formatter logrus.Formatter
 	logLevel := logrus.InfoLevel
 
-	if os.Getenv("ENV") == EnvLocal {
+	if os.Getenv("ENV") == LOCAL {
 		formatter = &logrus.TextFormatter{
 			DisableColors: false,
 			FullTimestamp: true,
+			ForceColors: true,
 		}
 		logLevel = logrus.DebugLevel
 	} else {
