@@ -25,7 +25,7 @@ func start() {
 		formatter = &log.TextFormatter{
 			DisableColors: false,
 			FullTimestamp: true,
-			ForceColors: true,
+			ForceColors:   true,
 		}
 		logLevel = log.DebugLevel
 	} else {
@@ -57,7 +57,7 @@ func main() {
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, World!")
 	})
-	for _, route := range routes.RoutesSetup {
+	for _, route := range routes.Routes {
 		handler := routes.MakeHandler(http.HandlerFunc(route.HandlerFunc))
 		router.Methods(route.Method).Path(route.Pattern).Name(route.Name).Handler(handler)
 	}
