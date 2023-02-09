@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/cleisommais/oauth-service-v1/db"
 	"github.com/cleisommais/oauth-service-v1/routes"
@@ -14,29 +14,33 @@ import (
 )
 
 const (
-	LocalEnv    = "LOCAL"
-	DefaultPort = "8000"
+	EnvLocal = "local"
 )
 
-func init() {
-	if LocalEnv == strings.ToUpper(os.Getenv("ENV")) {
-		logrus.SetFormatter(&logrus.TextFormatter{
+func start() {
+	var formatter logrus.Formatter
+	logLevel := logrus.InfoLevel
+
+	if os.Getenv("ENV") == EnvLocal {
+		formatter = &logrus.TextFormatter{
 			DisableColors: false,
 			FullTimestamp: true,
-		})
-		logrus.SetLevel(logrus.DebugLevel)
+		}
+		logLevel = logrus.DebugLevel
 	} else {
-		logrus.SetFormatter(&logrus.JSONFormatter{})
-		logrus.SetLevel(logrus.InfoLevel)
+		formatter = &logrus.JSONFormatter{}
 	}
+
+	logrus.SetFormatter(formatter)
+	logrus.SetLevel(logLevel)
+	logrus.Info("Running as " + os.Getenv("ENV") + " Environment")
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		logrus.WithError(err).Fatal("Error loading .env file")
 	}
-
+	start()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8000"
@@ -49,25 +53,17 @@ func main() {
 	defer dbConn.Close()
 
 	router := mux.NewRouter().StrictSlash(true)
-	for _, route := range routes.RoutesSetup {
-		var handler http.Handler
-		handler = routes.MakeHandler(route.HandlerFunc)
-		router.Methods(route.Method).Path(route.Pattern).Name(route.Name).Handler(handler)
-	}
-	n := negroni.New()
-	n.Use(negroni.NewLogger())
-	//n.Use(negroni.HandlerFunc())
-	n.UseHandler(router)
-	n.Run(":" + port)
-	/*r := mux.NewRouter()
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, World!")
 	})
-	r.HandleFunc("/test", routes.TestHandler).Methods("GET")
+	for _, route := range routes.RoutesSetup {
+		handler := routes.MakeHandler(http.HandlerFunc(route.HandlerFunc))
+		router.Methods(route.Method).Path(route.Pattern).Name(route.Name).Handler(handler)
+	}
 
-	logrus.WithField("port", port).Info("Listening on port")
-	err = http.ListenAndServe(":"+port, r)
-	if err != nil {
-		logrus.WithError(err).Fatal("Error starting the server")
-	}*/
+	n := negroni.New()
+	n.Use(negroni.NewLogger())
+	n.Use(negroni.NewRecovery())
+	n.UseHandler(router)
+	n.Run(":" + port)
 }

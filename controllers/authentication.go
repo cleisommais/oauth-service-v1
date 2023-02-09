@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	models "github.com/cleisommais/oauth-service-v1/models"
 	log "github.com/sirupsen/logrus"
@@ -9,25 +10,13 @@ import (
 )
 
 func LoginController(w http.ResponseWriter, r *http.Request) {
-	render := render.New()
-	id := r.Header.Get("id")
-	if id == "" {
-		log.WithFields(log.Fields{
-			"status": http.StatusBadRequest,
-		}).Error("Id query parameter is required")
-		render.JSON(w, http.StatusBadRequest, &models.Response{Status: http.StatusBadRequest, Message: "Id query parameter is required"})
-		return
-	}
-
-	login := r.Header.Get("login")
-	if login == "" {
-		log.WithFields(log.Fields{
-			"status": http.StatusBadRequest,
-		}).Error("Login query parameter is required")
-		render.JSON(w, http.StatusBadRequest, &models.Response{Status: http.StatusBadRequest, Message: "Login query parameter is required"})
-		return
-	}
-	response := &models.User{Id: id, FirstName: "Cleison", LastName: "Melo", Login: login, Password: "123"}
+	ren := render.New()
+	log.WithFields(log.Fields{
+		"status": http.StatusOK,
+	}).Info("Login requested")
+	response := &models.User{Id: "21313", FirstName: "Cleison", LastName: "Melo", Login: "cleison", Password: "123", CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	w.Header().Set("Content-Type", "application/json")
-	render.JSON(w, http.StatusOK, response)
+	if err := ren.JSON(w, http.StatusOK, response); err != nil {
+		log.WithError(err).Error("Failed to encode response to JSON")
+	}
 }

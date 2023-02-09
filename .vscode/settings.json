@@ -1,5 +1,5 @@
 {
-  "cSpell.words": ["dbname"],
+  "cSpell.words": ["dbname", "godotenv", "logrus", "negroni"],
   "gopls": {
     "ui.semanticTokens": true,
     "formatting.gofumpt": true
