@@ -1,8 +1,8 @@
 version: '3.8'
 services:
   devcontainer:
-    #image: mcr.microsoft.com/devcontainers/go:0-1.19-bullseye
-    build: .
+    image: gobuffalo/buffalo:v0.18.13
+    #build: .
     volumes:
       - ../..:/workspaces:cached
     network_mode: service:db
