@@ -37,3 +37,15 @@ We recommend you heading over to [http://gobuffalo.io](http://gobuffalo.io) and 
 Good luck!
 
 [Powered by Buffalo](http://gobuffalo.io)
+
+https://dev.to/alexmercedcoder/api-with-go-buffalo-in-2021-from-zero-to-deploy-5642
+
+buffalo pop generate fizz create_todos
+
+buffalo pop g model todo
+
+buffalo g actions todo index show add
+
+buffalo pop migrate
+
+buffalo generate resource users email password

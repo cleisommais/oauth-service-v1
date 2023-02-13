@@ -1,7 +1,7 @@
 package grifts
 
 import (
-	"oauth-service-v1/actions"
+	"github.com/cleisommais/oauth-service-v1/actions"
 
 	"github.com/gobuffalo/buffalo"
 )

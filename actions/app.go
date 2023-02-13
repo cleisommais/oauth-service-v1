@@ -3,8 +3,8 @@ package actions
 import (
 	"sync"
 
-	"oauth-service-v1/locales"
-	"oauth-service-v1/models"
+	"github.com/cleisommais/oauth-service-v1/locales"
+	"github.com/cleisommais/oauth-service-v1/models"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo-pop/v3/pop/popmw"
@@ -66,6 +66,7 @@ func App() *buffalo.App {
 		// Remove to disable this.
 		app.Use(popmw.Transaction(models.DB))
 		app.GET("/", HomeHandler)
+		
 	})
 
 	return app

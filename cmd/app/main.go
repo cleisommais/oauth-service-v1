@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"oauth-service-v1/actions"
+	"github.com/cleisommais/oauth-service-v1/actions"
 )
 
 // main is the starting point for your Buffalo application.
