@@ -7,6 +7,7 @@ import (
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/x/responder"
+	"github.com/google/jsonapi"
 
 	"github.com/cleisommais/oauth-service-v1/models"
 )
@@ -31,26 +32,33 @@ type UsersResource struct {
 // List gets all Users. This function is mapped to the path
 // GET /users
 func (v UsersResource) List(c buffalo.Context) error {
-	// Get the DB connection from the context
-	tx, ok := c.Value("tx").(*pop.Connection)
-	if !ok {
-		return fmt.Errorf("no transaction found")
-	}
+    // Get the DB connection from the context
+    tx, ok := c.Value("tx").(*pop.Connection)
+    if !ok {
+        return fmt.Errorf("no transaction found")
+    }
 
-	users := &models.Users{}
+    users := []*models.User{}
 
-	// Paginate results. Params "page" and "per_page" control pagination.
-	// Default values are "page=1" and "per_page=20".
-	q := tx.PaginateFromParams(c.Params())
+    // Paginate results. Params "page" and "per_page" control pagination.
+    // Default values are "page=1" and "per_page=20".
+    q := tx.PaginateFromParams(c.Params())
 
-	// Retrieve all Users from the DB
-	if err := q.All(users); err != nil {
-		return err
-	}
+    // Retrieve all Users from the DB
+    if err := q.All(&users); err != nil {
+        return err
+    }
 
-	return responder.Wants("json", func(c buffalo.Context) error {
-		return c.Render(200, r.JSON(users))
-	}).Respond(c)
+    // Serialize the users to JSON API format
+    w := c.Response()
+    w.Header().Set("Content-Type", jsonapi.MediaType)
+    w.WriteHeader(http.StatusOK)
+
+    if err := jsonapi.MarshalPayload(w, users); err != nil {
+        return err
+    }
+
+    return nil
 }
 
 // Show gets the data for one User. This function is mapped to
@@ -104,13 +112,7 @@ func (v UsersResource) Create(c buffalo.Context) error {
 		}).Respond(c)
 	}
 
-	return responder.Wants("html", func(c buffalo.Context) error {
-		// If there are no errors set a success message
-		c.Flash().Add("success", T.Translate(c, "user.created.success"))
-
-		// and redirect to the show page
-		return c.Redirect(http.StatusSeeOther, "/users/%v", user.ID)
-	}).Wants("json", func(c buffalo.Context) error {
+	return responder.Wants("json", func(c buffalo.Context) error {
 		return c.Render(http.StatusCreated, r.JSON(user))
 	}).Respond(c)
 }
