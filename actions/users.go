@@ -32,33 +32,33 @@ type UsersResource struct {
 // List gets all Users. This function is mapped to the path
 // GET /users
 func (v UsersResource) List(c buffalo.Context) error {
-    // Get the DB connection from the context
-    tx, ok := c.Value("tx").(*pop.Connection)
-    if !ok {
-        return fmt.Errorf("no transaction found")
-    }
+	// Get the DB connection from the context
+	tx, ok := c.Value("tx").(*pop.Connection)
+	if !ok {
+		return fmt.Errorf("no transaction found")
+	}
 
-    users := []*models.User{}
+	users := []*models.User{}
 
-    // Paginate results. Params "page" and "per_page" control pagination.
-    // Default values are "page=1" and "per_page=20".
-    q := tx.PaginateFromParams(c.Params())
+	// Paginate results. Params "page" and "per_page" control pagination.
+	// Default values are "page=1" and "per_page=20".
+	q := tx.PaginateFromParams(c.Params())
 
-    // Retrieve all Users from the DB
-    if err := q.All(&users); err != nil {
-        return err
-    }
+	// Retrieve all Users from the DB
+	if err := q.All(&users); err != nil {
+		return err
+	}
 
-    // Serialize the users to JSON API format
-    w := c.Response()
-    w.Header().Set("Content-Type", jsonapi.MediaType)
-    w.WriteHeader(http.StatusOK)
+	// Serialize the users to JSON API format
+	w := c.Response()
+	w.Header().Set("Content-Type", jsonapi.MediaType)
+	w.WriteHeader(http.StatusOK)
 
-    if err := jsonapi.MarshalPayload(w, users); err != nil {
-        return err
-    }
+	if err := jsonapi.MarshalPayload(w, users); err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 // Show gets the data for one User. This function is mapped to
@@ -78,9 +78,16 @@ func (v UsersResource) Show(c buffalo.Context) error {
 		return c.Error(http.StatusNotFound, err)
 	}
 
-	return responder.Wants("json", func(c buffalo.Context) error {
-		return c.Render(200, r.JSON(user))
-	}).Respond(c)
+	// Serialize the user to JSON API format
+	w := c.Response()
+	w.Header().Set("Content-Type", jsonapi.MediaType)
+	w.WriteHeader(http.StatusOK)
+
+	if err := jsonapi.MarshalPayload(w, user); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Create adds a User to the DB. This function is mapped to the
@@ -89,8 +96,8 @@ func (v UsersResource) Create(c buffalo.Context) error {
 	// Allocate an empty User
 	user := &models.User{}
 
-	// Bind user to the html form elements
-	if err := c.Bind(user); err != nil {
+	// Unmarshal the request payload to user
+	if err := jsonapi.UnmarshalPayload(c.Request().Body, user); err != nil {
 		return err
 	}
 
@@ -100,21 +107,47 @@ func (v UsersResource) Create(c buffalo.Context) error {
 		return fmt.Errorf("no transaction found")
 	}
 
-	// Validate the data from the html form
+	// Validate the data from the request payload
 	verrs, err := tx.ValidateAndCreate(user)
 	if err != nil {
 		return err
 	}
 
 	if verrs.HasAny() {
-		return responder.Wants("json", func(c buffalo.Context) error {
-			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
-		}).Respond(c)
+		w := c.Response()
+		w.Header().Set("Content-Type", jsonapi.MediaType)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+
+		errors := make([]*jsonapi.ErrorObject, len(verrs.Errors))
+
+		i := 0
+		for field, fieldErrors := range verrs.Errors {
+			for _, errMessage := range fieldErrors {
+				errors[i] = &jsonapi.ErrorObject{
+					Title:  field,
+					Detail: errMessage,
+					Status: "422",
+				}
+				i++
+			}
+		}
+
+		if err := jsonapi.MarshalErrors(w, errors); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	return responder.Wants("json", func(c buffalo.Context) error {
-		return c.Render(http.StatusCreated, r.JSON(user))
-	}).Respond(c)
+	w := c.Response()
+	w.Header().Set("Content-Type", jsonapi.MediaType)
+	w.WriteHeader(http.StatusCreated)
+
+	if err := jsonapi.MarshalPayload(w, user); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Update changes a User in the DB. This function is mapped to

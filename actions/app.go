@@ -1,10 +1,13 @@
 package actions
 
 import (
+	"net/http"
+	"strconv"
 	"sync"
 
 	"github.com/cleisommais/oauth-service-v1/locales"
 	"github.com/cleisommais/oauth-service-v1/models"
+	"github.com/google/jsonapi"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo-pop/v3/pop/popmw"
@@ -96,3 +99,48 @@ func forceSSL() buffalo.MiddlewareFunc {
 		SSLProxyHeaders: map[string]string{"X-Forwarded-Proto": "https"},
 	})
 }
+
+// ErrorMiddleware catches errors and returns them in the JSON:API error format
+func ErrorMiddleware(next buffalo.Handler) buffalo.Handler {
+    return func(c buffalo.Context) error {
+        err := next(c)
+        if err != nil {
+            status, ok := c.Value("jsonapi:status").(int)
+            if !ok {
+                status = http.StatusInternalServerError
+            }
+
+            source := &jsonapi.ErrorObject{}
+
+            title, _ := c.Value("jsonapi:title").(string)
+            if title == "" {
+                title = http.StatusText(status)
+            }
+
+            detail, _ := c.Value("jsonapi:detail").(string)
+            if detail == "" {
+                detail = err.Error()
+            }
+
+            errObj := &jsonapi.ErrorObject{
+                Status: strconv.Itoa(status),
+                Title:  title,
+                Detail: detail,
+                Meta: source.Meta,
+            }
+
+            res := c.Response()
+            res.Header().Set("Content-Type", jsonapi.MediaType)
+            res.WriteHeader(status)
+
+            if err := jsonapi.MarshalErrors(res, []*jsonapi.ErrorObject{errObj}); err != nil {
+                return err
+            }
+
+            return nil
+        }
+
+        return nil
+    }
+}
+
